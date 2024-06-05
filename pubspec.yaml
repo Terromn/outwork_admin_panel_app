@@ -1,0 +1,28 @@
+name: outwork_final_admin_panel_app
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  cloud_firestore: ^4.17.5
+  firebase_core: ^2.32.0
+  firebase_storage: ^11.7.7
+  flutter:
+    sdk: flutter
+  google_fonts: ^6.2.1
+  gsheets: ^0.5.0
+  permission_handler: ^11.3.1
+  qr_code_scanner: ^1.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  assets:
+    - assets/icon/
+  uses-material-design: true

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "296052478452",
+    "firebase_url": "https://outwork-f8f3f-default-rtdb.firebaseio.com",
+    "project_id": "outwork-f8f3f",
+    "storage_bucket": "outwork-f8f3f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:296052478452:android:f781ae7163f06a199029a1",
+        "android_client_info": {
+          "package_name": "com.outwork_final_admin_panel.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "296052478452-h58a7cnn3sstthdedkdc1efnm1a6bequ.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwx7_Clxus0i_TIVYYLZpWFAbTQcBJ90M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "296052478452-h58a7cnn3sstthdedkdc1efnm1a6bequ.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
