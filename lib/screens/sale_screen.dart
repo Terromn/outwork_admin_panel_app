@@ -155,14 +155,19 @@ class _SaleScreenState extends State<SaleScreen> {
                               // Perform action upon confirmation
                               _completePurchase();
                             },
-                            child: const Text("Confirmar", style: TextStyle(color: TeAppColorPalette.white),),
+                            child: const Text(
+                              "Confirmar",
+                              style: TextStyle(color: TeAppColorPalette.white),
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
                               // Close the dialog
                               Navigator.of(context).pop();
                             },
-                            child: const Text("Cancelar", style: TextStyle(color: TeAppColorPalette.white)),
+                            child: const Text("Cancelar",
+                                style:
+                                    TextStyle(color: TeAppColorPalette.white)),
                           ),
                         ],
                       );
@@ -195,30 +200,52 @@ class _SaleScreenState extends State<SaleScreen> {
     );
   }
 
-  // Function to complete the purchase
   Future<void> _completePurchase() async {
-    final sale = {
-      NewSaleModel.id: widget.uid,
-      NewSaleModel.name: 'Athlete Name', // Update with actual name if needed
-      NewSaleModel.date: DateTime.now().toString(),
-      NewSaleModel.price: selectedPackage == 'Otro'
-          ? otherQuantityController.text
-          : getPrice(),
-      NewSaleModel.discountPercentage: discountPercentageController.text,
-      NewSaleModel.paymentForm: getPaymentForm(),
-      NewSaleModel.package: selectedPackage,
-    };
+    // Fetch user document from Firestore
+    DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.uid)
+        .get();
 
-    await GoogleSheetsSalesApi.insert([sale]);
+    // Check if the document exists and retrieve the name
+    if (userSnapshot.exists) {
+      String userName = userSnapshot['name'] ?? 'Athlete Name';
 
-    Navigator.of(context).popUntil((route) => route.isFirst);
+      // Construct the sale object
+      final sale = {
+        NewSaleModel.id: widget.uid,
+        NewSaleModel.name: userName,
+        NewSaleModel.date: DateTime.now().toString(),
+        NewSaleModel.price: selectedPackage == 'Otro'
+            ? otherQuantityController.text
+            : getPrice(),
+        NewSaleModel.discountPercentage: discountPercentageController.text,
+        NewSaleModel.paymentForm: getPaymentForm(),
+        NewSaleModel.package: selectedPackage,
+      };
 
-    ScaffoldMessenger.of(context).showSnackBar(
+      // Insert sale into Google Sheets
+      await GoogleSheetsSalesApi.insert([sale]);
+
+      // Close all screens and show success message
+      Navigator.of(context).popUntil((route) => route.isFirst);
+
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Venta Completada Exitosamente')),
+          content: Text('Venta Completada Exitosamente'),
+        ),
       );
 
-    _updateUserCredits();
+      // Update user credits in Firestore
+      _updateUserCredits();
+    } else {
+      // Handle case where user document does not exist
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se encontró el usuario'),
+        ),
+      );
+    }
   }
 
   Widget buildButton(int index, String text) {

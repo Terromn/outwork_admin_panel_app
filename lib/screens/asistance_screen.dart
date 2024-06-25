@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:outwork_final_admin_panel_app/models/asistance_sheets_model.dart';
 import 'package:outwork_final_admin_panel_app/models/athlete_model.dart';
@@ -19,7 +20,7 @@ class AsistanceScreen extends StatefulWidget {
 }
 
 class _AsistanceScreenState extends State<AsistanceScreen> {
-  bool _isSwitched = false;
+  bool _isSwitched = true;
   late int _athleteLeftOverCredits = 0;
   late String athleteID = '';
   String? _profilePictureUrl;
@@ -190,7 +191,8 @@ class _AsistanceScreenState extends State<AsistanceScreen> {
                       Text('El Dia De Hoy Asistio?',
                           style: TextStyle(
                               fontFamily: TeAppThemeData.teFont, fontSize: 28)),
-                      Switch(
+                      CupertinoSwitch(
+                        activeColor: TeAppColorPalette.green,
                         value: _isSwitched,
                         onChanged: (value) {
                           setState(() {

@@ -1,9 +1,12 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:outwork_final_admin_panel_app/assets/app_theme.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Add this import
 
 import '../assets/app_color_palette.dart';
 import 'asistance_screen.dart';
@@ -23,11 +26,11 @@ class _ScanScreenState extends State<ScanScreen> {
   late String nextScreenName;
   Barcode? barcode;
   String qrText = '';
+  bool usingManualSearch = false; // Add this variable
 
   @override
   void initState() {
     super.initState();
-    _requestCameraPermission();
     nextScreenName = widget.nextScreenName;
   }
 
@@ -60,8 +63,19 @@ class _ScanScreenState extends State<ScanScreen> {
             title: Text(
               barcode != null
                   ? '${barcode!.code}'
-                  : 'Scanee un codigo para mostrar el ID',
+                  : 'Escanee un codigo para mostrar el ID',
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(
+                  Icons.search,
+                  size: 32,
+                ),
+                onPressed: () {
+                  _showSearchDialog(context);
+                },
+              ),
+            ],
           ),
           body: Stack(
             alignment: Alignment.center,
@@ -84,7 +98,9 @@ class _ScanScreenState extends State<ScanScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) =>  SaleScreen(uid: barcode!.code as String,)),
+                              builder: (context) => SaleScreen(
+                                    uid: barcode!.code as String,
+                                  )),
                         );
                       }
                     } else {
@@ -151,10 +167,150 @@ class _ScanScreenState extends State<ScanScreen> {
     });
   }
 
-  Future<void> _requestCameraPermission() async {
-    if (await Permission.camera.request().isGranted) {
+  void _showSearchDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String searchQuery = '';
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            return AlertDialog(
+              title: const Text('Buscar Atleta '),
+              content: SizedBox(
+                width: constraints.maxWidth * 0.8, // Adjust the width as needed
+                child: TextField(
+                  keyboardType: TextInputType.phone,
+                  maxLength: 10,
+                  inputFormatters: [
+                    
+                    FilteringTextInputFormatter.digitsOnly, // Allow only digits
+                  ],
+                  onChanged: (value) {
+                    searchQuery = value;
+                    usingManualSearch = true;
+                  },
+                  decoration: const InputDecoration(
+                      hintText: "Ingresar Numero De Telefono"),
+                ),
+              ),
+              actions: <Widget>[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      child: const Text(
+                        'CANCELAR',
+                        style: TextStyle(
+                          color: TeAppColorPalette.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    const SizedBox(width: 20),
+                    ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all<Color>(
+                          TeAppColorPalette.green,
+                        ),
+                      ),
+                      child: const Text(
+                        'BUSCAR',
+                        style: TextStyle(
+                          color: TeAppColorPalette.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onPressed: () async {
+                        Navigator.of(context).pop(); // Close the dialog
+                        if (searchQuery.isNotEmpty) {
+                          bool exists = await numberExists(searchQuery);
+                          if (exists) {
+                            String? athleteId =
+                                await getIdByNumber(searchQuery);
+                            if (athleteId != null) {
+                              if (nextScreenName == 'asistance') {
+                                // Check if the context is still valid before navigating
+                                if (mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AsistanceScreen(
+                                        athleteId: athleteId,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } else if (nextScreenName == 'sale') {
+                                if (mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          SaleScreen(uid: searchQuery),
+                                    ),
+                                  );
+                                }
+                              }
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('ID no encontrado'),
+                                  backgroundColor: TeAppColorPalette.green,
+                                ),
+                              );
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Numero inexistente, porfavor intente de nuevo...'),
+                                backgroundColor: TeAppColorPalette.green,
+                              ),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Numero inexistente, porfavor intente de nuevo...'),
+                              backgroundColor: TeAppColorPalette.green,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> numberExists(String searchQuery) async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('phoneNumber', isEqualTo: searchQuery)
+        .get();
+    return querySnapshot.docs.isNotEmpty;
+  }
+
+  Future<String?> getIdByNumber(String searchQuery) async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('phoneNumber', isEqualTo: searchQuery)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      return querySnapshot.docs.first.id;
     } else {
-      return;
+      return null;
     }
   }
 }
