@@ -1,14 +1,12 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Add this import for filtering input
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import 'package:outwork_final_admin_panel_app/models/new_sale_model_.dart';
-import 'package:outwork_final_admin_panel_app/utils/google_sheets_api.dart';
 import 'package:outwork_final_admin_panel_app/utils/google_sheets_sales_api.dart';
 import '../assets/app_color_palette.dart';
 import '../assets/app_theme.dart';
-import '../widgets/te_button_row.dart';
 import '../widgets/te_dropdown_menu.dart';
 import '../widgets/te_textfield.dart';
 
@@ -143,7 +141,7 @@ class _SaleScreenState extends State<SaleScreen> {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
-                      return AlertDialog(
+                      return CupertinoAlertDialog(
                         title: const Text("Confirmar Compra"),
                         content: const Text(
                             "¿Está seguro de que desea completar la venta?"),

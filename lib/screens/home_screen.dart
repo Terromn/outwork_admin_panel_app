@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:outwork_final_admin_panel_app/screens/create_user_screen.dart';
 import 'package:outwork_final_admin_panel_app/screens/merch_screen.dart';
 import 'package:outwork_final_admin_panel_app/screens/scan_screen.dart';
 import 'package:outwork_final_admin_panel_app/utils/te_media_query.dart';
@@ -82,9 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     "CREAR USUARIO",
                     Icons.add_box_rounded,
                     context,
-                    const ScanScreen(
-                      nextScreenName: 'asistance',
-                    ))
+                    const CreateUserScreen(),
+                    )
               ],
             ),
             Row(

@@ -1,13 +1,21 @@
-import 'package:flutter/material.dart';
+// ignore_for_file: library_private_types_in_public_api
 
+import 'package:flutter/material.dart';
 import '../assets/app_color_palette.dart';
 import '../assets/app_theme.dart';
 
 class TeButtonRow extends StatefulWidget {
-  const TeButtonRow({super.key});
+  final List<String> buttonLabels;
+
+  dynamic onPressed;
+
+  TeButtonRow({
+    super.key,
+    required this.buttonLabels,
+    required this.onPressed,
+  });
 
   @override
-  // ignore: library_private_types_in_public_api
   _TeButtonRowState createState() => _TeButtonRowState();
 }
 
@@ -16,33 +24,37 @@ class _TeButtonRowState extends State<TeButtonRow> {
 
   Widget buildButton(int index, String text) {
     return Expanded(
-      child: SizedBox(
-        height: 100,
-        child: TextButton(
-          onPressed: () {
-            setState(() {
-              _selectedIndex = index; // Update selected index
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: TeAppColorPalette.black,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(300.0),
-              side: BorderSide(
-                width: 4,
-                color: _selectedIndex == index
-                    ? TeAppColorPalette.green
-                    : TeAppColorPalette.black,
+      child: Padding(
+       
+        padding:  EdgeInsets.only(right:  index <  widget.buttonLabels.length -1 ? 32.0 : 0),
+        child: SizedBox(
+          height: 100,
+          child: TextButton(
+            onPressed: () {
+              setState(() {
+                _selectedIndex = index; // Update selected index
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: TeAppColorPalette.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(300.0),
+                side: BorderSide(
+                  width: 4,
+                  color: _selectedIndex == index
+                      ? TeAppColorPalette.green
+                      : TeAppColorPalette.black,
+                ),
               ),
             ),
-          ),
-          child: Text(
-            text,
-            style: TextStyle(
-              fontWeight: FontWeight.normal,
-              fontFamily: TeAppThemeData.teFont,
-              color: TeAppColorPalette.white,
-              fontSize: 28,
+            child: Text(
+              text,
+              style: TextStyle(
+                fontWeight: FontWeight.normal,
+                fontFamily: TeAppThemeData.teFont,
+                color: TeAppColorPalette.white,
+                fontSize: 28,
+              ),
             ),
           ),
         ),
@@ -58,13 +70,14 @@ class _TeButtonRowState extends State<TeButtonRow> {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        buildButton(0, 'Efectivo'),
-        const SizedBox(width: 32),
-        buildButton(1, 'Transferencia'),
-        const SizedBox(width: 32),
-        buildButton(2, 'Terminal'),
-      ],
+      children: List.generate(
+        widget.buttonLabels.length,
+        (index) {
+          Widget button = buildButton(index, widget.buttonLabels[index]);         
+          return 
+          button;
+        },
+      ),
     );
   }
 }

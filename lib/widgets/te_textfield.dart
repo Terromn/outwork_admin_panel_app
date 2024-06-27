@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../assets/app_color_palette.dart';
 import '../assets/app_theme.dart';
 
 class TeTextField extends StatelessWidget {
   final String labelText;
   final bool isPercentage;
-  final TextEditingController controller; // Accepting controller
+  final TextEditingController controller;
+  final TextInputType? textInputType; // New parameter for input type
 
-  const TeTextField({
-    super.key,
+  const TeTextField({super.key, 
     required this.labelText,
     required this.isPercentage,
-    required this.controller, // Adding this line to constructor
+    required this.controller,
+    this.textInputType, // Adding this line to constructor
   });
 
   @override
@@ -31,20 +33,33 @@ class TeTextField extends StatelessWidget {
           children: [
             Expanded(
               child: TextFormField(
-                controller: controller, // Assigning controller here
+                
+
+                controller: controller,
+                inputFormatters: textInputType == const TextInputType.numberWithOptions(signed: true, decimal: false) ? [
+                  FilteringTextInputFormatter.digitsOnly,
+                ] : null,
+                keyboardType: textInputType, // Assigning keyboardType here
+                maxLength: textInputType == const TextInputType.numberWithOptions(signed: true, decimal: false) ? 10 : 100,
                 style: TextStyle(
-                    fontFamily: TeAppThemeData.teFont, fontSize: 28),
+                  fontFamily: TeAppThemeData.teFont,
+                  fontSize: 28,
+                ),
                 textAlignVertical: TextAlignVertical.center,
                 decoration: InputDecoration(
                   labelText: labelText,
+                  counterText: '',
                   isCollapsed: true,
                   labelStyle: TextStyle(
-                      fontFamily: TeAppThemeData.teFont,
-                      fontSize: 28,
-                      fontWeight: FontWeight.normal),
+                    fontFamily: TeAppThemeData.teFont,
+                    fontSize: 28,
+                    fontWeight: FontWeight.normal,
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
-                      vertical: 0.0, horizontal: 24.0), // Add padding here
+                    vertical: 0.0,
+                    horizontal: 24.0,
+                  ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(0.0),
                     borderSide: const BorderSide(color: Colors.transparent),
@@ -57,12 +72,15 @@ class TeTextField extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 24.0),
                 child: Center(
-                    child: Text(
-                  "%",
-                  style: TextStyle(
-                      fontFamily: TeAppThemeData.teFont, fontSize: 28),
-                )),
-              )
+                  child: Text(
+                    "%",
+                    style: TextStyle(
+                      fontFamily: TeAppThemeData.teFont,
+                      fontSize: 28,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

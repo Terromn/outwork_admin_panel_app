@@ -1,13 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:outwork_final_admin_panel_app/assets/app_theme.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Add this import
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../assets/app_color_palette.dart';
 import 'asistance_screen.dart';
 import 'sale_screen.dart';
@@ -26,17 +23,20 @@ class _ScanScreenState extends State<ScanScreen> {
   late String nextScreenName;
   Barcode? barcode;
   String qrText = '';
-  bool usingManualSearch = false; // Add this variable
+  bool usingManualSearch = false;
+  late TextEditingController _controller;
 
   @override
   void initState() {
     super.initState();
     nextScreenName = widget.nextScreenName;
+    _controller = TextEditingController();
   }
 
   @override
   void dispose() {
     controller.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -63,7 +63,7 @@ class _ScanScreenState extends State<ScanScreen> {
             title: Text(
               barcode != null
                   ? '${barcode!.code}'
-                  : 'Escanee un codigo para mostrar el ID',
+                  : 'ESCANEE UN CODIGO PARA MOSTRAR EL ID',
             ),
             actions: [
               IconButton(
@@ -175,22 +175,18 @@ class _ScanScreenState extends State<ScanScreen> {
         return LayoutBuilder(
           builder: (context, constraints) {
             return AlertDialog(
-              title: const Text('Buscar Atleta '),
+              title: const Text('Buscar Atleta'),
               content: SizedBox(
-                width: constraints.maxWidth * 0.8, // Adjust the width as needed
+                width: constraints.maxWidth * 0.8,
                 child: TextField(
-                  keyboardType: TextInputType.phone,
-                  maxLength: 10,
-                  inputFormatters: [
-                    
-                    FilteringTextInputFormatter.digitsOnly, // Allow only digits
-                  ],
+                  controller: _controller,
+                  keyboardType: TextInputType.name,
                   onChanged: (value) {
-                    searchQuery = value;
+                    searchQuery = _controller.text;
                     usingManualSearch = true;
                   },
-                  decoration: const InputDecoration(
-                      hintText: "Ingresar Numero De Telefono"),
+                  decoration:
+                      const InputDecoration(hintText: "Ingresar Nombre"),
                 ),
               ),
               actions: <Widget>[
@@ -217,23 +213,15 @@ class _ScanScreenState extends State<ScanScreen> {
                           TeAppColorPalette.green,
                         ),
                       ),
-                      child: const Text(
-                        'BUSCAR',
-                        style: TextStyle(
-                          color: TeAppColorPalette.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                       onPressed: () async {
-                        Navigator.of(context).pop(); // Close the dialog
+                        String searchQuery = _controller.text
+                            .trim(); // Get trimmed text from controller
                         if (searchQuery.isNotEmpty) {
-                          bool exists = await numberExists(searchQuery);
+                          bool exists = await athleteExists(searchQuery);
                           if (exists) {
-                            String? athleteId =
-                                await getIdByNumber(searchQuery);
+                            String? athleteId = await getIdByName(searchQuery);
                             if (athleteId != null) {
                               if (nextScreenName == 'asistance') {
-                                // Check if the context is still valid before navigating
                                 if (mounted) {
                                   Navigator.push(
                                     context,
@@ -250,7 +238,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          SaleScreen(uid: searchQuery),
+                                          SaleScreen(uid: athleteId),
                                     ),
                                   );
                                 }
@@ -267,7 +255,7 @@ class _ScanScreenState extends State<ScanScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                    'Numero inexistente, porfavor intente de nuevo...'),
+                                    'Nombre inexistente, por favor inténtelo de nuevo...'),
                                 backgroundColor: TeAppColorPalette.green,
                               ),
                             );
@@ -275,13 +263,23 @@ class _ScanScreenState extends State<ScanScreen> {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                  'Numero inexistente, porfavor intente de nuevo...'),
+                              content: Text('Ingrese un nombre para buscar'),
                               backgroundColor: TeAppColorPalette.green,
                             ),
                           );
                         }
                       },
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 24.0, vertical: 18.0),
+                        child: Text(
+                          'BUSCAR',
+                          style: TextStyle(
+                            color: TeAppColorPalette.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -293,24 +291,55 @@ class _ScanScreenState extends State<ScanScreen> {
     );
   }
 
-  Future<bool> numberExists(String searchQuery) async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('phoneNumber', isEqualTo: searchQuery)
-        .get();
-    return querySnapshot.docs.isNotEmpty;
+  Future<bool> athleteExists(String searchQuery) async {
+    final querySnapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+
+    final searchParts = searchQuery.toLowerCase().split(' ');
+
+    for (var doc in querySnapshot.docs) {
+      final name = doc['name'] as String;
+      final nameParts = name.toLowerCase().split(' ');
+
+      bool match = true;
+      for (int i = 0; i < searchParts.length; i++) {
+        if (i >= nameParts.length || searchParts[i] != nameParts[i]) {
+          match = false;
+          break;
+        }
+      }
+
+      if (match) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
-  Future<String?> getIdByNumber(String searchQuery) async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('phoneNumber', isEqualTo: searchQuery)
-        .get();
+  Future<String?> getIdByName(String searchQuery) async {
+    final searchParts = searchQuery.toLowerCase().split(' ');
 
-    if (querySnapshot.docs.isNotEmpty) {
-      return querySnapshot.docs.first.id;
-    } else {
-      return null;
+    final querySnapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+
+    for (var doc in querySnapshot.docs) {
+      final name = doc['name'] as String;
+      final nameParts = name.toLowerCase().split(' ');
+
+      bool match = true;
+      for (int i = 0; i < searchParts.length; i++) {
+        if (i >= nameParts.length || searchParts[i] != nameParts[i]) {
+          match = false;
+          break;
+        }
+      }
+
+      if (match) {
+        return doc.id;
+      }
     }
+
+    return null;
   }
 }

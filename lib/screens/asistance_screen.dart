@@ -255,7 +255,7 @@ class _AsistanceScreenState extends State<AsistanceScreen> {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
-                      return AlertDialog(
+                      return CupertinoAlertDialog(
                         title: const Text("Confirmar Asistencia"),
                         content: const Text(
                             "¿Está seguro de que registrar la asistencia?"),
